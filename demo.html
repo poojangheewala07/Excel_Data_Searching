@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Roll Number Lookup</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Excel data Searching</h2>
+
+    <input type="file" id="excelFileInput" accept=".xlsx, .xls" />
+    <button onclick="readExcelFile()">Read Excel File</button>
+
+    <label for="phoneNumber">Enter Phone Number:</label>
+    <input type="text" id="phoneNumber" placeholder="Enter phone number">
+    <button onclick="lookupRollNumber()">Lookup Roll Number</button>
+
+    <div id="result"></div>
+
+    <script>
+        var studentData = [];
+        var fileReader = new FileReader();
+
+        function readExcelFile() {
+            var input = document.getElementById('excelFileInput');
+
+            if (!input.files || input.files.length === 0) {
+                alert('Please select an Excel file.');
+                return;
+            }
+
+            var file = input.files[0];
+
+            // Reset the fileReader before reading a new file
+            fileReader = new FileReader();
+
+            fileReader.onload = function (e) {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, { type: 'array' });
+
+                // Assuming the first sheet is the one you want to read
+                var sheetName = workbook.SheetNames[0];
+                var sheet = workbook.Sheets[sheetName];
+
+                // Convert sheet data to JSON with additional options for desired format
+                studentData = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+
+                console.log("Formatted StudentData:", formatStudentData(studentData));
+            };
+
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        function lookupRollNumber() {
+            var phoneNumber = document.getElementById('phoneNumber').value;
+            var resultDiv = document.getElementById('result');
+
+            var foundStudent = null;
+
+            for (var i = 1; i < studentData.length; i++) {
+                if (studentData[i][3] === phoneNumber) {
+                    foundStudent = studentData[i];
+                    break;
+                }
+            }
+
+            if (foundStudent) {
+                resultDiv.innerHTML = '<p>Roll Number: ' + foundStudent[2] + '</p>'; // Assuming roll number is in the fourth column
+            } else {
+                resultDiv.innerHTML = '<p>No student found with the given phone number.</p>';
+            }
+        }
+
+        function formatStudentData(data) {
+            var formattedData = [];
+
+            // Add column headers as the first element in the array
+            formattedData.push(data[0]);
+
+            // Iterate through the rows and convert them to arrays
+            for (var i = 1; i < data.length; i++) {
+                formattedData.push(data[i]);
+            }
+
+            return formattedData;
+        }
+    </script>
+
+</body>
+
+</html>
